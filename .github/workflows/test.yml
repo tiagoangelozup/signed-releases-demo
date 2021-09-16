@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - uses: hmarr/debug-action@v2
-      - id: 'signs release artifacts'
+      - id: 'signs-release-artifacts'
         env:
           ZIPBALL_URL: https://api.github.com/repos/tiagoangelozup/signed-releases-demo/zipball/v0.0.1
           TARBALL_URL: https://api.github.com/repos/tiagoangelozup/signed-releases-demo/tarball/v0.0.1

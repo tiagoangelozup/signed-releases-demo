@@ -37,10 +37,10 @@ jobs:
           gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.zip.sig" --detach-sign "${FILE_NAME}.zip"
           gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.tar.gz.sig" --detach-sign "${FILE_NAME}.tar.gz"
 
-          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip.asc")" \
-            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip.asc")" \
-            --data-binary @"${FILE_NAME}.zip.asc"
+          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip.sig")" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip.sig")" \
+            --data-binary @"${FILE_NAME}.zip.sig"
 
-          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.tar.gz.asc")" \
-            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.tar.gz.asc")" \
-            --data-binary @"${FILE_NAME}.tar.gz.asc"
+          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.tar.gz.sig")" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.tar.gz.sig")" \
+            --data-binary @"${FILE_NAME}.tar.gz.sig"

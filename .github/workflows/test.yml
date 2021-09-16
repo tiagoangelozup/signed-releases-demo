@@ -9,11 +9,12 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    env:
-      ZIPBALL_URL: ${{ github.event.release.zipball_url }}
-      TARBALL_URL: ${{ github.event.release.tarball_url }}
 
     steps:
-      - run: |
+      - uses: hmarr/debug-action@v2
+      - env:
+          ZIPBALL_URL: ${{ github.event.release.zipball_url }}
+          TARBALL_URL: ${{ github.event.release.tarball_url }}
+        run: |
           echo $ZIPBALL_URL
           echo $TARBALL_URL

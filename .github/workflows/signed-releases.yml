@@ -9,15 +9,37 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: hmarr/debug-action@v2
-      - id: 'signs-release-artifacts'
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v4
+        with:
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+
+      - name: Debug
+        uses: hmarr/debug-action@v2
+
+      - name: Signs release artifacts
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZIPBALL_URL: ${{ github.event.release.zipball_url }}
           TARBALL_URL: ${{ github.event.release.tarball_url }}
           FILE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}
           UPLOAD_URL: ${{ github.event.release.upload_url }}
         run: |
-          echo $ZIPBALL_URL
-          echo $TARBALL_URL
-          echo $FILE_NAME
-          echo $UPLOAD_URL
+          UPLOAD_URL=$(echo $UPLOAD_URL | cut -d '{' -f1)
+
+          curl -L "${ZIPBALL_URL}" --output "${FILE_NAME}.zip"
+          curl -L "${TARBALL_URL}" --output "${FILE_NAME}.tar.gz"
+
+          gpg --armor --detach-sign "${FILE_NAME}.zip"
+          gpg --armor --detach-sign "${FILE_NAME}.tar.gz"
+
+          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip.asc")" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip.asc")" \
+            --data-binary @"${FILE_NAME}.zip.asc"
+
+          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.tar.gz.asc")" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.tar.gz.asc")" \
+            --data-binary @"${FILE_NAME}.tar.gz.asc"

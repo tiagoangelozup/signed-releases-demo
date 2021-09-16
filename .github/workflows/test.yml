@@ -10,8 +10,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ZIPBALL_URL: {{ github.event.release.zipball_url }}
-      TARBALL_URL: {{ github.event.release.tarball_url }}
+      ZIPBALL_URL: ${{ github.event.release.zipball_url }}
+      TARBALL_URL: ${{ github.event.release.tarball_url }}
 
     steps:
       - run: |

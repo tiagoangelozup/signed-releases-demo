@@ -17,5 +17,8 @@ jobs:
           ZIPBALL_URL: https://api.github.com/repos/tiagoangelozup/signed-releases-demo/zipball/v0.0.1
           TARBALL_URL: https://api.github.com/repos/tiagoangelozup/signed-releases-demo/tarball/v0.0.1
           REPOSITORY_NAME: signed-releases-demo
+          TAG_NAME: v0.0.1
+          UPLOAD_URL: upload_url
         run: |
-          curl -L "${ZIPBALL_URL}" --output "${REPOSITORY_NAME}-0.0.1.zip"
+          curl -L "${ZIPBALL_URL}" --output "${REPOSITORY_NAME}-${TAG_NAME}.zip"
+          curl -L "${TARBALL_URL}" --output "${REPOSITORY_NAME}-${TAG_NAME}.tar.gz"

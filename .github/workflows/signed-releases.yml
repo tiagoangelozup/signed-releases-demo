@@ -14,8 +14,10 @@ jobs:
         env:
           ZIPBALL_URL: ${{ github.event.release.zipball_url }}
           TARBALL_URL: ${{ github.event.release.tarball_url }}
-          REPOSITORY_NAME: ${{ github.event.repository.name }}
+          FILE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}
+          UPLOAD_URL: ${{ github.event.release.upload_url }}
         run: |
           echo $ZIPBALL_URL
           echo $TARBALL_URL
-          echo $REPOSITORY_NAME
+          echo $FILE_NAME
+          echo $UPLOAD_URL

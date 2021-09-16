@@ -12,11 +12,10 @@ jobs:
 
     steps:
       - uses: hmarr/debug-action@v2
-      - env:
-          ZIPBALL_URL: ${{ github.event.release.zipball_url }}
-          TARBALL_URL: ${{ github.event.release.tarball_url }}
-          REF: ${{ github.event.ref }}
+      - id: 'signs release artifacts'
+        env:
+          ZIPBALL_URL: https://api.github.com/repos/tiagoangelozup/signed-releases-demo/zipball/v0.0.1
+          TARBALL_URL: https://api.github.com/repos/tiagoangelozup/signed-releases-demo/tarball/v0.0.1
+          REPOSITORY_NAME: signed-releases-demo
         run: |
-          echo $ZIPBALL_URL
-          echo $TARBALL_URL
-          echo $REF
+          curl -L "${ZIPBALL_URL}" --output "${REPOSITORY_NAME}-0.0.1.zip"

@@ -9,6 +9,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # v2.3.4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
 
       - name: Import GPG key
         id: import-gpg
@@ -16,9 +21,6 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
-
-      - name: Debug
-        uses: hmarr/debug-action@v2
 
       - name: Signs release artifacts
         env:
@@ -31,15 +33,9 @@ jobs:
         run: |
           UPLOAD_URL=$(echo $UPLOAD_URL | cut -d '{' -f1)
 
-          curl -L "${ZIPBALL_URL}" --output "${FILE_NAME}.zip"
-          curl -L "${TARBALL_URL}" --output "${FILE_NAME}.tar.gz"
+          git archive --format=tar.gz --prefix=${FILE_NAME}/ -o ${FILE_NAME}.tar.gz HEAD
 
-          gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.zip.sig" --detach-sign "${FILE_NAME}.zip"
           gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.tar.gz.sig" --detach-sign "${FILE_NAME}.tar.gz"
-
-          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip.sig")" \
-            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip.sig")" \
-            --data-binary @"${FILE_NAME}.zip.sig"
 
           curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.tar.gz.sig")" \
             -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.tar.gz.sig")" \

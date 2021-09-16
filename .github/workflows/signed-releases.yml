@@ -10,3 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v2
+      - id: 'signs release artifacts'
+        env:
+          ZIPBALL_URL: ${{ github.event.release.zipball_url }}
+          TARBALL_URL: ${{ github.event.release.tarball_url }}
+        run: |
+          echo $ZIPBALL_URL
+          echo $TARBALL_URL

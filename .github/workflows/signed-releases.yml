@@ -23,7 +23,7 @@ jobs:
       - name: Signs release artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_FINGERPRINT: ${{ steps.import-gpg.outputs.fingerprint }}"
+          GPG_FINGERPRINT: ${{ steps.import-gpg.outputs.fingerprint }}
           ZIPBALL_URL: ${{ github.event.release.zipball_url }}
           TARBALL_URL: ${{ github.event.release.tarball_url }}
           FILE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}

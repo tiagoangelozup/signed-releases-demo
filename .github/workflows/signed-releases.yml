@@ -40,10 +40,10 @@ jobs:
           sha256sum "${FILE_NAME}.tar.gz" >> checksums.txt
           sha256sum "${FILE_NAME}.zip" >> checksums.txt
           gpg --batch -u ${GPG_FINGERPRINT} --output "checksums.txt.sig" --detach-sign "checksums.txt"
-          curl "${UPLOAD_URL}?name=checksums.txt.sig" \
+          curl -sSL "${UPLOAD_URL}?name=checksums.txt.sig" \
             -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "checksums.txt.sig")" \
             --data-binary @checksums.txt.sig
-          curl "${UPLOAD_URL}?name=checksums.txt" \
+          curl -sSL "${UPLOAD_URL}?name=checksums.txt" \
             -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "checksums.txt")" \
             --data-binary @checksums.txt
 

@@ -56,7 +56,7 @@ jobs:
           ZIPBALL_URL: ${{ github.event.release.zipball_url }}
           TARBALL_URL: ${{ github.event.release.tarball_url }}
           FILE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}
-          DOWNLOADS_URL: ${{ github.event.repository.downloads_url }}/${{ github.event.release.tag_name }}
+          DOWNLOADS_URL: ${{ github.event.repository.html_url }}/releases/download/${{ github.event.release.tag_name }}
         run: |
           set -e; set -x
           curl -sSL ${TARBALL_URL} --output ${FILE_NAME}.tar.gz

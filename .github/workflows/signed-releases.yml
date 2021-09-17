@@ -28,21 +28,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import-gpg.outputs.fingerprint }}
+          TARBALL_URL: ${{ github.event.repository.html_url }}/archive/refs/tags/${{ github.event.release.tag_name }}.tar.gz
+          ZIPBALL_URL: ${{ github.event.repository.html_url }}/archive/refs/tags/${{ github.event.release.tag_name }}.zip
           FILE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}
           UPLOAD_URL: ${{ github.event.release.upload_url }}
         run: |
           set -e; set -x
           UPLOAD_URL=$(echo $UPLOAD_URL | cut -d '{' -f1)
-          git archive --format=zip --prefix=${FILE_NAME}/ -o ${FILE_NAME}.zip HEAD
-          git archive --format=tar.gz --prefix=${FILE_NAME}/ -o ${FILE_NAME}.tar.gz HEAD
-          gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.zip.sig" --detach-sign "${FILE_NAME}.zip"
-          gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.tar.gz.sig" --detach-sign "${FILE_NAME}.tar.gz"
-          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip.sig")" \
-            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip.sig")" \
-            --data-binary @"${FILE_NAME}.zip.sig"
-          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.tar.gz.sig")" \
-            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.tar.gz.sig")" \
-            --data-binary @"${FILE_NAME}.tar.gz.sig"
+          curl -sSL "${TARBALL_URL}" --output "${FILE_NAME}.tar.gz"
+          curl -sSL "${ZIPBALL_URL}" --output "${FILE_NAME}.zip"
+          sha256sum "${FILE_NAME}.tar.gz" >> checksums.txt
+          sha256sum "${FILE_NAME}.zip" >> checksums.txt
+          gpg --batch -u ${GPG_FINGERPRINT} --output "checksums.txt.sig" --detach-sign "checksums.txt"
+          curl "${UPLOAD_URL}?name=checksums.txt.sig" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "checksums.txt.sig")" \
+            --data-binary @checksums.txt.sig
+          curl "${UPLOAD_URL}?name=checksums.txt" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "checksums.txt")" \
+            --data-binary @checksums.txt
 
   check-signature:
     runs-on: ubuntu-latest
@@ -59,8 +62,8 @@ jobs:
           set -e; set -x
           curl -sSL ${TARBALL_URL} --output ${FILE_NAME}.tar.gz
           curl -sSL ${ZIPBALL_URL} --output ${FILE_NAME}.zip
-          curl -sSL ${DOWNLOADS_URL}/${FILE_NAME}.tar.gz.sig --output ${FILE_NAME}.tar.gz.sig
-          curl -sSL ${DOWNLOADS_URL}/${FILE_NAME}.zip.sig --output ${FILE_NAME}.zip.sig
+          curl -sSL ${DOWNLOADS_URL}/checksums.txt.sig --output checksums.txt.sig
+          curl -sSL ${DOWNLOADS_URL}/checksums.txt --output checksums.txt
           gpg --keyserver keys.openpgp.org --recv-keys ${GPG_FINGERPRINT}
-          gpg --verify "${FILE_NAME}.tar.gz.sig" "${FILE_NAME}.tar.gz"
-          gpg --verify "${FILE_NAME}.zip.sig" "${FILE_NAME}.zip"
+          gpg --verify checksums.txt.sig checksums.txt
+          sha256sum --check --ignore-missing checksums.txt

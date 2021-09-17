@@ -33,15 +33,18 @@ jobs:
         run: |
           UPLOAD_URL=$(echo $UPLOAD_URL | cut -d '{' -f1)
 
-          git archive --format=zip --prefix=${FILE_NAME}/ -o /tmp/${FILE_NAME}.zip HEAD
-          git archive --format=tar.gz --prefix=${FILE_NAME}/ -o /tmp/${FILE_NAME}.tar.gz HEAD
+          git archive --format=zip --prefix=${FILE_NAME}/ -o ${FILE_NAME}.zip HEAD
+          git archive --format=tar.gz --prefix=${FILE_NAME}/ -o ${FILE_NAME}.tar.gz HEAD
 
-          gpg --batch -u ${GPG_FINGERPRINT} --output "/tmp/${FILE_NAME}.zip.sig" --detach-sign "/tmp/${FILE_NAME}.zip"
-          gpg --batch -u ${GPG_FINGERPRINT} --output "/tmp/${FILE_NAME}.tar.gz.sig" --detach-sign "/tmp/${FILE_NAME}.tar.gz"
+          gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.zip.sig" --detach-sign "${FILE_NAME}.zip"
+          gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.tar.gz.sig" --detach-sign "${FILE_NAME}.tar.gz"
 
-          curl "${UPLOAD_URL}?name=$(basename "/tmp/${FILE_NAME}.zip.sig")" \
-            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "/tmp/${FILE_NAME}.zip.sig")" \
-            --data-binary @"/tmp/${FILE_NAME}.zip.sig"
-          curl "${UPLOAD_URL}?name=$(basename "/tmp/${FILE_NAME}.tar.gz.sig")" \
-            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "/tmp/${FILE_NAME}.tar.gz.sig")" \
-            --data-binary @"/tmp/${FILE_NAME}.tar.gz.sig"
+          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip")" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip")" \
+            --data-binary @"${FILE_NAME}.zip"
+          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip.sig")" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip.sig")" \
+            --data-binary @"${FILE_NAME}.zip.sig"
+          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.tar.gz.sig")" \
+            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.tar.gz.sig")" \
+            --data-binary @"${FILE_NAME}.tar.gz.sig"

@@ -33,14 +33,12 @@ jobs:
           FILE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}
           UPLOAD_URL: ${{ github.event.release.upload_url }}
         run: |
+          set -e; set -x
           UPLOAD_URL=$(echo $UPLOAD_URL | cut -d '{' -f1)
-
           git archive --format=zip --prefix=${FILE_NAME}/ -o ${FILE_NAME}.zip HEAD
           git archive --format=tar.gz --prefix=${FILE_NAME}/ -o ${FILE_NAME}.tar.gz HEAD
-
           gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.zip.sig" --detach-sign "${FILE_NAME}.zip"
           gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.tar.gz.sig" --detach-sign "${FILE_NAME}.tar.gz"
-
           curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip.sig")" \
             -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip.sig")" \
             --data-binary @"${FILE_NAME}.zip.sig"
@@ -60,10 +58,11 @@ jobs:
           FILE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}
           DOWNLOADS_URL: ${{ github.event.repository.downloads_url }}/${{ github.event.release.tag_name }}
         run: |
-          curl -L ${TARBALL_URL} --output ${FILE_NAME}.tar.gz
-          curl -L ${TARBALL_URL} --output ${FILE_NAME}.zip
-          curl -L ${DOWNLOADS_URL}/${FILE_NAME}.tar.gz.sig --output ${FILE_NAME}.tar.gz.sig
-          curl -L ${DOWNLOADS_URL}/${FILE_NAME}.zip.sig --output ${FILE_NAME}.zip.sig
+          set -e; set -x
+          curl -sSL ${TARBALL_URL} --output ${FILE_NAME}.tar.gz
+          curl -sSL ${TARBALL_URL} --output ${FILE_NAME}.zip
+          curl -sSL ${DOWNLOADS_URL}/${FILE_NAME}.tar.gz.sig --output ${FILE_NAME}.tar.gz.sig
+          curl -sSL ${DOWNLOADS_URL}/${FILE_NAME}.zip.sig --output ${FILE_NAME}.zip.sig
           gpg --keyserver https://keys.openpgp.org/ --recv-keys ${GPG_FINGERPRINT}
           gpg --verify "${FILE_NAME}.zip.sig"
           gpg --verify "${FILE_NAME}.tar.gz.sig"

@@ -60,9 +60,9 @@ jobs:
         run: |
           set -e; set -x
           curl -sSL ${TARBALL_URL} --output ${FILE_NAME}.tar.gz
-          curl -sSL ${TARBALL_URL} --output ${FILE_NAME}.zip
+          curl -sSL ${ZIPBALL_URL} --output ${FILE_NAME}.zip
           curl -sSL ${DOWNLOADS_URL}/${FILE_NAME}.tar.gz.sig --output ${FILE_NAME}.tar.gz.sig
           curl -sSL ${DOWNLOADS_URL}/${FILE_NAME}.zip.sig --output ${FILE_NAME}.zip.sig
           gpg --keyserver keys.openpgp.org --recv-keys ${GPG_FINGERPRINT}
-          gpg --verify "${FILE_NAME}.zip.sig"
-          gpg --verify "${FILE_NAME}.tar.gz.sig"
+          gpg --verify "${FILE_NAME}.tar.gz.sig" "${FILE_NAME}.tar.gz"
+          gpg --verify "${FILE_NAME}.zip.sig" "${FILE_NAME}.zip"

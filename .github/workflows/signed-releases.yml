@@ -6,8 +6,10 @@ on:
 
 jobs:
 
-  build:
+  sign-artifacts:
     runs-on: ubuntu-latest
+    outputs:
+      gpg-fingerprint: ${{ steps.import-gpg.outputs.fingerprint }}
     steps:
       - name: Checkout
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # v2.3.4
@@ -39,12 +41,29 @@ jobs:
           gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.zip.sig" --detach-sign "${FILE_NAME}.zip"
           gpg --batch -u ${GPG_FINGERPRINT} --output "${FILE_NAME}.tar.gz.sig" --detach-sign "${FILE_NAME}.tar.gz"
 
-          curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip")" \
-            -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip")" \
-            --data-binary @"${FILE_NAME}.zip"
           curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.zip.sig")" \
             -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.zip.sig")" \
             --data-binary @"${FILE_NAME}.zip.sig"
           curl "${UPLOAD_URL}?name=$(basename "${FILE_NAME}.tar.gz.sig")" \
             -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: $(file -b --mime-type "${FILE_NAME}.tar.gz.sig")" \
             --data-binary @"${FILE_NAME}.tar.gz.sig"
+
+  check-signature:
+    runs-on: ubuntu-latest
+    needs: sign-artifacts
+    steps:
+      - name: Verify the signature
+        env:
+          GPG_FINGERPRINT: ${{ needs.sign-artifacts.outputs.gpg-fingerprint }}
+          ZIPBALL_URL: ${{ github.event.release.zipball_url }}
+          TARBALL_URL: ${{ github.event.release.tarball_url }}
+          FILE_NAME: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}
+          DOWNLOADS_URL: ${{ github.event.repository.downloads_url }}/${{ github.event.release.tag_name }}
+        run: |
+          curl -L ${TARBALL_URL} --output ${FILE_NAME}.tar.gz
+          curl -L ${TARBALL_URL} --output ${FILE_NAME}.zip
+          curl -L ${DOWNLOADS_URL}/${FILE_NAME}.tar.gz.sig --output ${FILE_NAME}.tar.gz.sig
+          curl -L ${DOWNLOADS_URL}/${FILE_NAME}.zip.sig --output ${FILE_NAME}.zip.sig
+          gpg --keyserver https://keys.openpgp.org/ --recv-keys ${GPG_FINGERPRINT}
+          gpg --verify "${FILE_NAME}.zip.sig"
+          gpg --verify "${FILE_NAME}.tar.gz.sig"
